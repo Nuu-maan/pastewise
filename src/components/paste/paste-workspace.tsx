@@ -1,67 +1,81 @@
 "use client";
 
-import { XIcon } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { useEffect, useState } from "react";
+import { Kbd } from "@/components/ui/kbd";
 import { Textarea } from "@/components/ui/textarea";
 import { ToolBoundary } from "@/components/tools/tool-boundary";
 import { ToolFor } from "@/components/tools/registry";
 import { useDetection } from "@/hooks/use-detection";
 import { KindBadge } from "./kind-badge";
+import { LatencyHud } from "./latency-hud";
 import { SAMPLES } from "./samples";
+
+const PLACEHOLDERS = ["Paste some JSON", "Paste a JWT", "Paste a cron expression", "Paste a stack trace", "Paste a color"];
 
 export function PasteWorkspace() {
   const [text, setText] = useState("");
+  const [placeholder, setPlaceholder] = useState(0);
   const { detection, pending } = useDetection(text);
 
+  useEffect(() => {
+    const id = setInterval(() => setPlaceholder((i) => (i + 1) % PLACEHOLDERS.length), 2500);
+    return () => clearInterval(id);
+  }, []);
+
   return (
-    <div className="grid gap-6">
-      <Card className="gap-0 py-0 shadow-xl shadow-foreground/5">
-        <CardHeader className="flex h-12 items-center justify-between border-b [.border-b]:pb-0">
-          <KindBadge detection={detection} pending={pending} />
-          {text && (
-            <Button variant="ghost" size="icon-sm" onClick={() => setText("")} aria-label="Clear">
-              <XIcon />
-            </Button>
-          )}
-        </CardHeader>
+    <div className="grid w-full max-w-2xl gap-4">
+      <div className="focus-glow overflow-hidden rounded-[28px] border bg-card">
         <Textarea
           autoFocus
+          rows={1}
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Paste JSON, a JWT, a cron expression, a stack trace, a color…"
+          onKeyDown={(e) => e.key === "Escape" && setText("")}
+          placeholder={`${PLACEHOLDERS[placeholder]}…`}
           aria-label="Pasted content"
           spellCheck={false}
-          className="max-h-64 min-h-36 resize-none rounded-none border-0 bg-transparent p-4 font-mono text-sm shadow-none focus-visible:ring-0 md:text-sm dark:bg-transparent"
+          className="max-h-48 min-h-0 resize-none rounded-none border-0 bg-transparent px-5 py-4 text-xl shadow-none focus-visible:ring-0 md:text-xl dark:bg-transparent [&:not(:placeholder-shown)]:font-mono [&:not(:placeholder-shown)]:text-sm"
         />
         <AnimatePresence initial={false}>
           {detection && (
             <motion.div
-              key={detection.kind}
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.25, ease: "easeOut" }}
             >
-              <CardContent className="border-t py-5">
+              <div className="grid gap-5 px-5 pt-1 pb-4">
+                <KindBadge detection={detection} />
                 <ToolBoundary key={text}>
                   <ToolFor text={text} detection={detection} />
                 </ToolBoundary>
-              </CardContent>
+                <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Kbd>Esc</Kbd> to clear
+                </p>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
-      </Card>
-      <div className="flex flex-wrap items-center justify-center gap-2">
-        <span className="text-xs text-muted-foreground">Try</span>
-        {SAMPLES.map(([label, sample]) => (
-          <Button key={label} variant="outline" size="sm" className="rounded-full font-normal" onClick={() => setText(sample)}>
-            {label}
-          </Button>
-        ))}
       </div>
+      {!text && (
+        <div className="grid gap-2 text-center text-sm text-muted-foreground">
+          <p>Paste anything. It becomes the tool you need.</p>
+          <div className="flex flex-wrap justify-center gap-x-3 gap-y-1">
+            <span>Try</span>
+            {SAMPLES.map(([label, sample]) => (
+              <button
+                key={label}
+                onClick={() => setText(sample)}
+                className="underline decoration-dotted underline-offset-4 transition-colors hover:text-foreground"
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      <LatencyHud detection={detection} pending={pending} />
     </div>
   );
 }
