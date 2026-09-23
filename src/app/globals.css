@@ -49,7 +49,7 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
+  --background: oklch(0.985 0.001 106.4);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
@@ -132,4 +132,11 @@
   html {
     @apply font-sans;
   }
+}
+.focus-glow {
+  --glow: oklch(0.56 0.2 268);
+  border-color: color-mix(in oklch, var(--glow) 70%, transparent);
+  box-shadow:
+    0 0 0 4px color-mix(in oklch, var(--glow) 10%, transparent),
+    0 16px 48px -16px color-mix(in oklch, var(--glow) 30%, transparent);
 }
