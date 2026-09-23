@@ -13,7 +13,7 @@ export function CopyButton({ value, className }: { value: string; className?: st
     setTimeout(() => setCopied(false), 1200);
   };
   return (
-    <Button variant="ghost" size="icon-xs" onClick={copy} aria-label="Copy" className={className}>
+    <Button variant="ghost" size="icon-xs" onClick={copy} aria-label="Copy" className={cn("pressable", className)}>
       {copied ? <CheckIcon /> : <CopyIcon />}
     </Button>
   );
